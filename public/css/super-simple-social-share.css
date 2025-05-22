@@ -5,6 +5,30 @@
     margin: 20px 0;
 }
 
+/* Horizontal alignment */
+.ssss-align-left {
+    justify-content: flex-start;
+}
+
+.ssss-align-center {
+    justify-content: center;
+}
+
+.ssss-align-right {
+    justify-content: flex-end;
+}
+
+/* Vertical alignment */
+.ssss-valign-top {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.ssss-valign-bottom {
+    margin-top: 20px;
+    margin-bottom: 0;
+}
+
 .ssss-social-icon {
     position: relative;
     text-decoration: none;
@@ -86,4 +110,14 @@
 .ssss-admin-info ul {
     list-style-type: disc;
     margin-left: 20px;
+}
+
+/* Color picker styling */
+input[type="color"] {
+    width: 50px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
 } 

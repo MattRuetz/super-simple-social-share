@@ -32,4 +32,6 @@ function run_super_simple_social_share()
     $plugin = new Super_Simple_Social_Share();
     $plugin->run();
 }
-run_super_simple_social_share();
+
+// Hook into WordPress
+add_action('plugins_loaded', 'run_super_simple_social_share');
