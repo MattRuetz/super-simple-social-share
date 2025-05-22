@@ -8,7 +8,13 @@ if (!defined('WPINC')) {
 <div class="wrap">
     <div class="ssss-admin-wrap">
         <div class="ssss-admin-header">
-            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <div class="ssss-header-content">
+                <img src="<?php echo SSSS_PLUGIN_URL; ?>admin/images/plugin-logo.png" alt="Super Simple Social Share" class="ssss-plugin-logo" />
+                <div class="ssss-header-text">
+                    <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+                    <p class="ssss-version">Version <?php echo SSSS_VERSION; ?></p>
+                </div>
+            </div>
         </div>
 
         <form method="post" action="options.php">
@@ -18,6 +24,19 @@ if (!defined('WPINC')) {
 
             <div class="ssss-admin-content">
                 <div class="ssss-admin-main">
+                    <!-- Preview Section -->
+                    <div class="ssss-admin-section ssss-preview-top">
+                        <h2>Preview</h2>
+                        <p>This is how your social sharing icons will appear:</p>
+                        <div class="ssss-preview-container">
+                            <?php echo $this->generate_preview(); ?>
+                        </div>
+                        <div class="ssss-preview-save">
+                            <?php submit_button('Save & Update Preview', 'secondary', 'submit', false); ?>
+                            <p class="description">Save changes to see updated preview with your current settings.</p>
+                        </div>
+                    </div>
+
                     <!-- Appearance Section -->
                     <div class="ssss-admin-section">
                         <h2>Appearance</h2>
@@ -25,6 +44,11 @@ if (!defined('WPINC')) {
                         <div class="ssss-form-group">
                             <label for="icon_color">Icon Color</label>
                             <?php $this->icon_color_callback(); ?>
+                        </div>
+
+                        <div class="ssss-form-group">
+                            <label>Brand Colors</label>
+                            <?php $this->use_brand_colors_callback(); ?>
                         </div>
 
                         <div class="ssss-form-group">
@@ -41,6 +65,11 @@ if (!defined('WPINC')) {
                         <div class="ssss-form-group">
                             <label for="vertical_align">Vertical Alignment</label>
                             <?php $this->vertical_align_callback(); ?>
+                        </div>
+
+                        <div class="ssss-form-group">
+                            <label for="layout_direction">Layout Direction</label>
+                            <?php $this->layout_direction_callback(); ?>
                         </div>
                     </div>
 
@@ -66,6 +95,11 @@ if (!defined('WPINC')) {
                             <label for="instagram_username">Instagram Username</label>
                             <?php $this->instagram_username_callback(); ?>
                         </div>
+
+                        <div class="ssss-form-group">
+                            <label for="linkedin_profile">LinkedIn Profile URL</label>
+                            <?php $this->linkedin_profile_callback(); ?>
+                        </div>
                     </div>
 
                     <div class="ssss-submit-section">
@@ -79,26 +113,45 @@ if (!defined('WPINC')) {
                         <h2>How to Use</h2>
                         <p>Add the social sharing icons to any post or page using the shortcode:</p>
                         <div class="ssss-preview-section">
-                            <code>[social_share]</code>
+                            <code class="ssss-shortcode-copy" data-shortcode="[social_share]" title="Click to copy">[social_share]</code>
                         </div>
-                    </div>
-
-                    <!-- Features -->
-                    <div class="ssss-admin-section">
-                        <h2>Features</h2>
-                        <ul>
-                            <li>Clean, modern social sharing icons</li>
-                            <li>Customizable icon color and size</li>
-                            <li>Flexible alignment options</li>
-                            <li>Tooltips on hover</li>
-                            <li>Responsive design</li>
-                            <li>FontAwesome icons</li>
-                        </ul>
+                        <div class="ssss-copy-notification" id="ssss-copy-notification">Shortcode copied to clipboard!</div>
                     </div>
 
                     <!-- Support -->
                     <div class="ssss-admin-section">
                         <h2>Support</h2>
+
+                        <!-- FAQ Accordion -->
+                        <div class="ssss-faq-accordion">
+                            <div class="ssss-faq-item">
+                                <div class="ssss-faq-question">
+                                    <h4>How do I add social sharing to my posts/pages? <span class="ssss-faq-toggle">+</span></h4>
+                                </div>
+                                <div class="ssss-faq-answer">
+                                    <p>Simply add the shortcode <code>[social_share]</code> to any post, page, or widget where you want the social sharing icons to appear.</p>
+                                </div>
+                            </div>
+
+                            <div class="ssss-faq-item">
+                                <div class="ssss-faq-question">
+                                    <h4>Why aren't my alignment settings working? <span class="ssss-faq-toggle">+</span></h4>
+                                </div>
+                                <div class="ssss-faq-answer">
+                                    <p>Make sure to save your settings after making changes. If alignment still isn't working, your theme's CSS might be overriding the plugin styles. Try switching to a different alignment option or contact support.</p>
+                                </div>
+                            </div>
+
+                            <div class="ssss-faq-item">
+                                <div class="ssss-faq-question">
+                                    <h4>Can I customize which social networks are displayed? <span class="ssss-faq-toggle">+</span></h4>
+                                </div>
+                                <div class="ssss-faq-answer">
+                                    <p>Yes! In the "Social Networks" section, you can enable/disable specific networks and change their display order using the "Icon Order" field.</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <p>Need help? Check out the documentation or contact support.</p>
                         <p>
                             <a href="https://github.com/mattruetz/super-simple-social-share" target="_blank" class="button">Documentation</a>

@@ -1,30 +1,77 @@
 .ssss-social-share {
-    display: flex;
+    display: flex !important;
     gap: 15px;
     margin: 20px 0;
     width: 100%;
+    flex-direction: row; /* Default to horizontal */
 }
 
-/* Horizontal alignment */
-.ssss-align-left {
-    justify-content: flex-start;
+/* Layout direction - Override the default */
+.ssss-social-share.ssss-horizontal {
+    flex-direction: row !important;
 }
 
-.ssss-align-center {
-    justify-content: center;
-}
-
-.ssss-align-right {
-    justify-content: flex-end;
-}
-
-/* Vertical alignment */
-.ssss-valign-top {
+.ssss-social-share.ssss-vertical {
+    flex-direction: column !important;
     align-items: flex-start;
+    width: fit-content;
 }
 
-.ssss-valign-bottom {
-    align-items: flex-end;
+/* Horizontal alignment for horizontal layout */
+.ssss-social-share.ssss-horizontal.ssss-align-left {
+    justify-content: flex-start !important;
+}
+
+.ssss-social-share.ssss-horizontal.ssss-align-center {
+    justify-content: center !important;
+}
+
+.ssss-social-share.ssss-horizontal.ssss-align-right {
+    justify-content: flex-end !important;
+}
+
+/* Vertical alignment for horizontal layout */
+.ssss-social-share.ssss-horizontal.ssss-valign-top {
+    align-items: flex-start !important;
+}
+
+.ssss-social-share.ssss-horizontal.ssss-valign-bottom {
+    align-items: flex-end !important;
+}
+
+/* Alignment for vertical layout */
+.ssss-social-share.ssss-vertical.ssss-align-left {
+    align-items: flex-start !important;
+}
+
+.ssss-social-share.ssss-vertical.ssss-align-center {
+    align-items: center !important;
+}
+
+.ssss-social-share.ssss-vertical.ssss-align-right {
+    align-items: flex-end !important;
+}
+
+.ssss-social-share.ssss-vertical.ssss-valign-top {
+    justify-content: flex-start !important;
+}
+
+.ssss-social-share.ssss-vertical.ssss-valign-bottom {
+    justify-content: flex-end !important;
+}
+
+/* Backup simple alignment classes - These should work as fallbacks */
+.ssss-social-share.ssss-align-center {
+    justify-content: center !important;
+}
+
+.ssss-social-share.ssss-align-right {
+    justify-content: flex-end !important;
+}
+
+.ssss-social-share.ssss-vertical {
+    flex-direction: column !important;
+    width: auto !important;
 }
 
 .ssss-social-icon {

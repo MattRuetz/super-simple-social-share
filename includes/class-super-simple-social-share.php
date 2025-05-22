@@ -86,6 +86,54 @@ class Super_Simple_Social_Share
         return 'https://www.instagram.com/' . $username . '/';
     }
 
+    private function get_linkedin_url($options, $current_url, $post_title)
+    {
+        $linkedin_profile = isset($options['linkedin_profile']) ? $options['linkedin_profile'] : '';
+
+        // If profile URL is provided, use it instead of sharing
+        if (!empty($linkedin_profile)) {
+            return esc_url($linkedin_profile);
+        }
+
+        // Fall back to sharing attempt (may not work reliably)
+        return 'https://www.linkedin.com/feed/?shareActive=true&text=' . urlencode($post_title . ' ' . $current_url);
+    }
+
+    private function get_linkedin_tooltip($options)
+    {
+        $linkedin_profile = isset($options['linkedin_profile']) ? $options['linkedin_profile'] : '';
+
+        if (!empty($linkedin_profile)) {
+            return 'Visit LinkedIn Profile';
+        }
+
+        return 'Share on LinkedIn';
+    }
+
+    private function get_brand_colors()
+    {
+        return array(
+            'facebook' => '#4267B2',
+            'twitter' => '#1DA1F2',
+            'pinterest' => '#E60023',
+            'email' => '#666666', // Dark gray for email
+            'linkedin' => '#0A66C2',
+            'instagram' => '#405DE6'
+        );
+    }
+
+    private function get_icon_color($network, $options)
+    {
+        $use_brand_colors = isset($options['use_brand_colors']) ? $options['use_brand_colors'] : false;
+
+        if ($use_brand_colors) {
+            $brand_colors = $this->get_brand_colors();
+            return isset($brand_colors[$network]) ? $brand_colors[$network] : $options['icon_color'];
+        }
+
+        return isset($options['icon_color']) ? $options['icon_color'] : '#000000';
+    }
+
     public function social_share_shortcode($atts)
     {
         $options = get_option('ssss_options');
@@ -94,6 +142,7 @@ class Super_Simple_Social_Share
         $icon_order = isset($options['icon_order']) ? $options['icon_order'] : 'facebook,twitter,pinterest,email,linkedin,instagram';
         $horizontal_align = isset($options['horizontal_align']) ? $options['horizontal_align'] : 'left';
         $vertical_align = isset($options['vertical_align']) ? $options['vertical_align'] : 'top';
+        $layout_direction = isset($options['layout_direction']) ? $options['layout_direction'] : 'horizontal';
 
         // Get the current URL using the correct method
         $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
@@ -133,8 +182,8 @@ class Super_Simple_Social_Share
             'linkedin' => array(
                 'icon' => 'fa-linkedin',
                 'icon_type' => 'fab',
-                'url' => 'https://www.linkedin.com/shareArticle?mini=true&url=' . urlencode($current_url) . '&title=' . urlencode($post_title) . '&summary=' . urlencode($post_title) . '&source=' . urlencode(get_bloginfo('name')),
-                'tooltip' => 'Share on LinkedIn',
+                'url' => $this->get_linkedin_url($options, $current_url, $post_title),
+                'tooltip' => $this->get_linkedin_tooltip($options),
                 'enabled' => isset($options['enable_linkedin']) ? $options['enable_linkedin'] : true
             ),
             'instagram' => array(
@@ -156,9 +205,11 @@ class Super_Simple_Social_Share
         }
 
         $alignment_class = 'ssss-align-' . $horizontal_align . ' ssss-valign-' . $vertical_align;
+        $direction_class = 'ssss-' . $layout_direction;
 
-        $output = '<div class="ssss-social-share ' . esc_attr($alignment_class) . '">';
+        $output = '<div class="ssss-social-share ' . esc_attr($alignment_class) . ' ' . esc_attr($direction_class) . '">';
         foreach ($ordered_networks as $network => $data) {
+            $network_color = $this->get_icon_color($network, $options);
             $output .= sprintf(
                 '<a href="%s" class="ssss-social-icon" target="_blank" rel="noopener noreferrer" data-tooltip="%s">
                     <i class="%s %s" style="color: %s; font-size: %spx;"></i>
@@ -167,7 +218,7 @@ class Super_Simple_Social_Share
                 esc_attr($data['tooltip']),
                 esc_attr($data['icon_type']),
                 esc_attr($data['icon']),
-                esc_attr($icon_color),
+                esc_attr($network_color),
                 esc_attr($icon_size)
             );
         }
@@ -270,6 +321,30 @@ class Super_Simple_Social_Share
             $this->plugin_name,
             'ssss_main_section'
         );
+
+        add_settings_field(
+            'linkedin_profile',
+            'LinkedIn Profile URL',
+            array($this, 'linkedin_profile_callback'),
+            $this->plugin_name,
+            'ssss_main_section'
+        );
+
+        add_settings_field(
+            'layout_direction',
+            'Layout Direction',
+            array($this, 'layout_direction_callback'),
+            $this->plugin_name,
+            'ssss_main_section'
+        );
+
+        add_settings_field(
+            'use_brand_colors',
+            'Use Brand Colors',
+            array($this, 'use_brand_colors_callback'),
+            $this->plugin_name,
+            'ssss_main_section'
+        );
     }
 
     public function validate_options($input)
@@ -304,6 +379,20 @@ class Super_Simple_Social_Share
 
         if (isset($input['instagram_username'])) {
             $new_input['instagram_username'] = sanitize_text_field($input['instagram_username']);
+        }
+
+        if (isset($input['linkedin_profile'])) {
+            $new_input['linkedin_profile'] = esc_url_raw($input['linkedin_profile']);
+        }
+
+        if (isset($input['layout_direction'])) {
+            $new_input['layout_direction'] = sanitize_text_field($input['layout_direction']);
+        }
+
+        if (isset($input['use_brand_colors'])) {
+            $new_input['use_brand_colors'] = true;
+        } else {
+            $new_input['use_brand_colors'] = false;
         }
 
         return $new_input;
@@ -383,7 +472,7 @@ class Super_Simple_Social_Share
                     <?php checked($enabled, true); ?> />
                 <label for="enable_<?php echo esc_attr($network); ?>"><?php echo esc_html($label); ?></label>
             </div>
-<?php
+        <?php
         }
     }
 
@@ -393,6 +482,52 @@ class Super_Simple_Social_Share
         $username = isset($options['instagram_username']) ? $options['instagram_username'] : '';
         echo '<input type="text" id="instagram_username" name="ssss_options[instagram_username]" value="' . esc_attr($username) . '" class="regular-text" placeholder="yourusername" />';
         echo '<p class="description">Enter your Instagram username (without @). This will link to your Instagram profile instead of sharing content.</p>';
+    }
+
+    public function linkedin_profile_callback()
+    {
+        $options = get_option('ssss_options');
+        $profile = isset($options['linkedin_profile']) ? $options['linkedin_profile'] : '';
+        echo '<input type="url" id="linkedin_profile" name="ssss_options[linkedin_profile]" value="' . esc_attr($profile) . '" class="regular-text" placeholder="https://www.linkedin.com/in/yourprofile" />';
+        echo '<p class="description">Enter your LinkedIn profile URL. If provided, LinkedIn will link to your profile instead of attempting to share (recommended due to LinkedIn API limitations).</p>';
+    }
+
+    public function layout_direction_callback()
+    {
+        $options = get_option('ssss_options');
+        $direction = isset($options['layout_direction']) ? $options['layout_direction'] : 'horizontal';
+        ?>
+        <select name="ssss_options[layout_direction]" id="layout_direction">
+            <option value="horizontal" <?php selected($direction, 'horizontal'); ?>>Horizontal</option>
+            <option value="vertical" <?php selected($direction, 'vertical'); ?>>Vertical</option>
+        </select>
+        <p class="description">Choose whether to display social icons in a horizontal row or vertical column.</p>
+    <?php
+    }
+
+    public function use_brand_colors_callback()
+    {
+        $options = get_option('ssss_options');
+        $use_brand_colors = isset($options['use_brand_colors']) ? $options['use_brand_colors'] : false;
+    ?>
+        <label>
+            <input type="checkbox" name="ssss_options[use_brand_colors]" value="1" <?php checked($use_brand_colors, true); ?> />
+            Use each network's brand color instead of custom color
+        </label>
+        <p class="description">When enabled, each icon will use its official brand color (Facebook blue, X blue, Pinterest red, etc.)</p>
+<?php
+    }
+
+    public function generate_preview()
+    {
+        // Generate a preview using current settings
+        $options = get_option('ssss_options');
+
+        // Use dummy values for preview
+        $dummy_atts = array();
+        $preview_html = $this->social_share_shortcode($dummy_atts);
+
+        return $preview_html;
     }
 
     public function display_plugin_admin_page()
@@ -406,6 +541,18 @@ class Super_Simple_Social_Share
         if (strpos($hook, $this->plugin_name) === false) {
             return;
         }
+
+        // Load FontAwesome for the preview
+        wp_enqueue_style('fontawesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css');
+
+        // Load public CSS for preview
+        wp_enqueue_style(
+            $this->plugin_name . '-public',
+            SSSS_PLUGIN_URL . 'public/css/super-simple-social-share.css',
+            array(),
+            $this->version,
+            'all'
+        );
 
         wp_enqueue_style(
             $this->plugin_name . '-admin',
