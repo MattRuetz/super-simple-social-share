@@ -61,6 +61,11 @@ if (!defined('WPINC')) {
                             <?php $this->icon_order_callback(); ?>
                             <p class="description">Enter the order of icons separated by commas. Available options: facebook, twitter, pinterest, email, linkedin, instagram</p>
                         </div>
+
+                        <div class="ssss-form-group">
+                            <label for="instagram_username">Instagram Username</label>
+                            <?php $this->instagram_username_callback(); ?>
+                        </div>
                     </div>
 
                     <div class="ssss-submit-section">

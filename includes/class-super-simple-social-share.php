@@ -45,6 +45,47 @@ class Super_Simple_Social_Share
         add_shortcode('social_share', array($this, 'social_share_shortcode'));
     }
 
+    private function get_current_post_title()
+    {
+        // Try to get the actual post being viewed, not the theme builder template
+        $queried_object = get_queried_object();
+
+        // If we have a post object from the query, use its title
+        if ($queried_object && isset($queried_object->post_title)) {
+            return $queried_object->post_title;
+        }
+
+        // If we're on a singular post/page, try to get the title
+        if (is_singular()) {
+            global $post;
+            if ($post && isset($post->post_title)) {
+                return $post->post_title;
+            }
+        }
+
+        // Fallback to wp_title or site title
+        $title = wp_title('', false);
+        if (empty($title)) {
+            $title = get_bloginfo('name');
+        }
+
+        return $title;
+    }
+
+    private function get_instagram_url($options)
+    {
+        $instagram_username = isset($options['instagram_username']) ? $options['instagram_username'] : '';
+
+        if (empty($instagram_username)) {
+            return '#'; // Return # if no username is set
+        }
+
+        // Clean the username (remove @ if present and any spaces)
+        $username = trim(str_replace('@', '', $instagram_username));
+
+        return 'https://www.instagram.com/' . $username . '/';
+    }
+
     public function social_share_shortcode($atts)
     {
         $options = get_option('ssss_options');
@@ -57,6 +98,9 @@ class Super_Simple_Social_Share
         // Get the current URL using the correct method
         $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 
+        // Get the actual post title (handle theme builders like Divi)
+        $post_title = $this->get_current_post_title();
+
         $social_networks = array(
             'facebook' => array(
                 'icon' => 'fa-square-facebook',
@@ -68,37 +112,37 @@ class Super_Simple_Social_Share
             'twitter' => array(
                 'icon' => 'fa-square-x-twitter',
                 'icon_type' => 'fab',
-                'url' => 'https://twitter.com/intent/tweet?url=' . urlencode($current_url) . '&text=' . urlencode(get_the_title()),
+                'url' => 'https://twitter.com/intent/tweet?url=' . urlencode($current_url) . '&text=' . urlencode($post_title),
                 'tooltip' => 'Share on Twitter',
                 'enabled' => isset($options['enable_twitter']) ? $options['enable_twitter'] : true
             ),
             'pinterest' => array(
                 'icon' => 'fa-square-pinterest',
                 'icon_type' => 'fab',
-                'url' => 'https://pinterest.com/pin/create/button/?url=' . urlencode($current_url) . '&media=' . urlencode(get_the_post_thumbnail_url()) . '&description=' . urlencode(get_the_title()),
+                'url' => 'https://pinterest.com/pin/create/button/?url=' . urlencode($current_url) . '&media=' . urlencode(get_the_post_thumbnail_url()) . '&description=' . urlencode($post_title),
                 'tooltip' => 'Share on Pinterest',
                 'enabled' => isset($options['enable_pinterest']) ? $options['enable_pinterest'] : true
             ),
             'email' => array(
                 'icon' => 'fa-envelope',
                 'icon_type' => 'fas',
-                'url' => 'mailto:?subject=' . urlencode(get_the_title()) . '&body=' . urlencode($current_url),
+                'url' => 'mailto:?subject=' . urlencode($post_title) . '&body=' . urlencode($current_url),
                 'tooltip' => 'Share via Email',
                 'enabled' => isset($options['enable_email']) ? $options['enable_email'] : true
             ),
             'linkedin' => array(
                 'icon' => 'fa-linkedin',
                 'icon_type' => 'fab',
-                'url' => 'https://www.linkedin.com/sharing/share-offsite/?url=' . urlencode($current_url),
+                'url' => 'https://www.linkedin.com/shareArticle?mini=true&url=' . urlencode($current_url) . '&title=' . urlencode($post_title) . '&summary=' . urlencode($post_title) . '&source=' . urlencode(get_bloginfo('name')),
                 'tooltip' => 'Share on LinkedIn',
                 'enabled' => isset($options['enable_linkedin']) ? $options['enable_linkedin'] : true
             ),
             'instagram' => array(
                 'icon' => 'fa-square-instagram',
                 'icon_type' => 'fab',
-                'url' => '#',
+                'url' => $this->get_instagram_url($options),
                 'tooltip' => 'Follow on Instagram',
-                'enabled' => isset($options['enable_instagram']) ? $options['enable_instagram'] : true
+                'enabled' => isset($options['enable_instagram']) ? $options['enable_instagram'] : false
             )
         );
 
@@ -218,6 +262,14 @@ class Super_Simple_Social_Share
             $this->plugin_name,
             'ssss_main_section'
         );
+
+        add_settings_field(
+            'instagram_username',
+            'Instagram Username',
+            array($this, 'instagram_username_callback'),
+            $this->plugin_name,
+            'ssss_main_section'
+        );
     }
 
     public function validate_options($input)
@@ -248,6 +300,10 @@ class Super_Simple_Social_Share
         $networks = array('facebook', 'twitter', 'pinterest', 'email', 'linkedin', 'instagram');
         foreach ($networks as $network) {
             $new_input['enable_' . $network] = isset($input['enable_' . $network]) ? true : false;
+        }
+
+        if (isset($input['instagram_username'])) {
+            $new_input['instagram_username'] = sanitize_text_field($input['instagram_username']);
         }
 
         return $new_input;
@@ -313,11 +369,11 @@ class Super_Simple_Social_Share
             'pinterest' => 'Pinterest',
             'email' => 'Email',
             'linkedin' => 'LinkedIn',
-            'instagram' => 'Instagram'
+            'instagram' => 'Instagram (Links to Profile)'
         );
 
         foreach ($networks as $network => $label) {
-            $enabled = isset($options['enable_' . $network]) ? $options['enable_' . $network] : true;
+            $enabled = isset($options['enable_' . $network]) ? $options['enable_' . $network] : ($network === 'instagram' ? false : true);
         ?>
             <div class="ssss-checkbox-item">
                 <input type="checkbox"
@@ -329,6 +385,14 @@ class Super_Simple_Social_Share
             </div>
 <?php
         }
+    }
+
+    public function instagram_username_callback()
+    {
+        $options = get_option('ssss_options');
+        $username = isset($options['instagram_username']) ? $options['instagram_username'] : '';
+        echo '<input type="text" id="instagram_username" name="ssss_options[instagram_username]" value="' . esc_attr($username) . '" class="regular-text" placeholder="yourusername" />';
+        echo '<p class="description">Enter your Instagram username (without @). This will link to your Instagram profile instead of sharing content.</p>';
     }
 
     public function display_plugin_admin_page()
