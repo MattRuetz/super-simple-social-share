@@ -378,4 +378,68 @@
 .ssss-copy-notification.show {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* Preview disabled styles */
+.ssss-preview-disabled .ssss-preview-icon {
+    pointer-events: none;
+    cursor: default;
+    position: relative;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.ssss-preview-disabled .ssss-preview-icon:hover {
+    transform: scale(1.1);
+}
+
+.ssss-preview-disabled .ssss-preview-icon i {
+    transition: opacity 0.2s ease;
+}
+
+.ssss-preview-disabled .ssss-preview-icon:hover i {
+    opacity: 0.8;
+}
+
+/* Tooltip styles for preview */
+.ssss-preview-disabled .ssss-preview-icon::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 5px 10px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    font-size: 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    margin-bottom: 5px;
+    z-index: 1000;
+}
+
+.ssss-preview-disabled .ssss-preview-icon::after {
+    content: '';
+    position: absolute;
+    bottom: calc(100% - 5px);
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 1000;
+}
+
+.ssss-preview-disabled .ssss-preview-icon:hover::before,
+.ssss-preview-disabled .ssss-preview-icon:hover::after {
+    opacity: 1;
+    visibility: visible;
 } 

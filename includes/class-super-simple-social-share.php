@@ -520,14 +520,85 @@ class Super_Simple_Social_Share
 
     public function generate_preview()
     {
-        // Generate a preview using current settings
+        // Generate a preview using current settings but with disabled links
         $options = get_option('ssss_options');
+        $icon_color = isset($options['icon_color']) ? $options['icon_color'] : '#000000';
+        $icon_size = isset($options['icon_size']) ? $options['icon_size'] : '24';
+        $icon_order = isset($options['icon_order']) ? $options['icon_order'] : 'facebook,twitter,pinterest,email,linkedin,instagram';
+        $horizontal_align = isset($options['horizontal_align']) ? $options['horizontal_align'] : 'left';
+        $vertical_align = isset($options['vertical_align']) ? $options['vertical_align'] : 'top';
+        $layout_direction = isset($options['layout_direction']) ? $options['layout_direction'] : 'horizontal';
 
-        // Use dummy values for preview
-        $dummy_atts = array();
-        $preview_html = $this->social_share_shortcode($dummy_atts);
+        // Define social networks (same as in shortcode)
+        $social_networks = array(
+            'facebook' => array(
+                'icon' => 'fa-square-facebook',
+                'icon_type' => 'fab',
+                'tooltip' => 'Share on Facebook',
+                'enabled' => isset($options['enable_facebook']) ? $options['enable_facebook'] : true
+            ),
+            'twitter' => array(
+                'icon' => 'fa-square-x-twitter',
+                'icon_type' => 'fab',
+                'tooltip' => 'Share on Twitter',
+                'enabled' => isset($options['enable_twitter']) ? $options['enable_twitter'] : true
+            ),
+            'pinterest' => array(
+                'icon' => 'fa-square-pinterest',
+                'icon_type' => 'fab',
+                'tooltip' => 'Share on Pinterest',
+                'enabled' => isset($options['enable_pinterest']) ? $options['enable_pinterest'] : true
+            ),
+            'email' => array(
+                'icon' => 'fa-envelope',
+                'icon_type' => 'fas',
+                'tooltip' => 'Share via Email',
+                'enabled' => isset($options['enable_email']) ? $options['enable_email'] : true
+            ),
+            'linkedin' => array(
+                'icon' => 'fa-linkedin',
+                'icon_type' => 'fab',
+                'tooltip' => $this->get_linkedin_tooltip($options),
+                'enabled' => isset($options['enable_linkedin']) ? $options['enable_linkedin'] : true
+            ),
+            'instagram' => array(
+                'icon' => 'fa-square-instagram',
+                'icon_type' => 'fab',
+                'tooltip' => 'Follow on Instagram',
+                'enabled' => isset($options['enable_instagram']) ? $options['enable_instagram'] : false
+            )
+        );
 
-        return $preview_html;
+        // Sort networks based on order setting and filter enabled ones
+        $order_array = explode(',', $icon_order);
+        $ordered_networks = array();
+        foreach ($order_array as $network) {
+            if (isset($social_networks[$network]) && $social_networks[$network]['enabled']) {
+                $ordered_networks[$network] = $social_networks[$network];
+            }
+        }
+
+        $alignment_class = 'ssss-align-' . $horizontal_align . ' ssss-valign-' . $vertical_align;
+        $direction_class = 'ssss-' . $layout_direction;
+
+        $output = '<div class="ssss-social-share ssss-preview-disabled ' . esc_attr($alignment_class) . ' ' . esc_attr($direction_class) . '">';
+        foreach ($ordered_networks as $network => $data) {
+            $network_color = $this->get_icon_color($network, $options);
+            $output .= sprintf(
+                '<span class="ssss-social-icon ssss-preview-icon" data-tooltip="%s" title="%s">
+                    <i class="%s %s" style="color: %s; font-size: %spx;"></i>
+                </span>',
+                esc_attr($data['tooltip']),
+                esc_attr($data['tooltip']),
+                esc_attr($data['icon_type']),
+                esc_attr($data['icon']),
+                esc_attr($network_color),
+                esc_attr($icon_size)
+            );
+        }
+        $output .= '</div>';
+
+        return $output;
     }
 
     public function display_plugin_admin_page()
