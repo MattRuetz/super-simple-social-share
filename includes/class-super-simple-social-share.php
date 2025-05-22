@@ -37,8 +37,7 @@ class Super_Simple_Social_Share
     {
         add_action('admin_menu', array($this, 'add_plugin_admin_menu'));
         add_action('admin_init', array($this, 'register_settings'));
-        add_action('admin_enqueue_scripts', array($this->admin, 'enqueue_styles'));
-        add_action('admin_enqueue_scripts', array($this->admin, 'enqueue_scripts'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_styles'));
     }
 
     private function define_public_hooks()
@@ -135,9 +134,22 @@ class Super_Simple_Social_Share
 
     public function add_plugin_admin_menu()
     {
-        add_options_page(
-            'Super Simple Social Share Settings',
+        // Add top-level menu
+        add_menu_page(
+            'Super Simple Social Share',
             'Social Share',
+            'manage_options',
+            $this->plugin_name,
+            array($this, 'display_plugin_admin_page'),
+            'dashicons-share',
+            30
+        );
+
+        // Add submenu page (same as main menu)
+        add_submenu_page(
+            $this->plugin_name,
+            'Settings',
+            'Settings',
             'manage_options',
             $this->plugin_name,
             array($this, 'display_plugin_admin_page')
@@ -265,7 +277,6 @@ class Super_Simple_Social_Share
         $options = get_option('ssss_options');
         $order = isset($options['icon_order']) ? $options['icon_order'] : 'facebook,twitter,pinterest,email,linkedin,instagram';
         echo '<input type="text" id="icon_order" name="ssss_options[icon_order]" value="' . esc_attr($order) . '" class="regular-text" />';
-        echo '<p class="description">Enter the order of icons separated by commas. Available options: facebook, twitter, pinterest, email, linkedin, instagram</p>';
     }
 
     public function horizontal_align_callback()
@@ -308,13 +319,14 @@ class Super_Simple_Social_Share
         foreach ($networks as $network => $label) {
             $enabled = isset($options['enable_' . $network]) ? $options['enable_' . $network] : true;
         ?>
-            <label style="display: block; margin-bottom: 5px;">
+            <div class="ssss-checkbox-item">
                 <input type="checkbox"
+                    id="enable_<?php echo esc_attr($network); ?>"
                     name="ssss_options[enable_<?php echo esc_attr($network); ?>]"
                     value="1"
                     <?php checked($enabled, true); ?> />
-                <?php echo esc_html($label); ?>
-            </label>
+                <label for="enable_<?php echo esc_attr($network); ?>"><?php echo esc_html($label); ?></label>
+            </div>
 <?php
         }
     }
@@ -322,6 +334,30 @@ class Super_Simple_Social_Share
     public function display_plugin_admin_page()
     {
         include_once SSSS_PLUGIN_DIR . 'admin/partials/super-simple-social-share-admin-display.php';
+    }
+
+    public function enqueue_admin_styles($hook)
+    {
+        // Only load on our plugin's pages
+        if (strpos($hook, $this->plugin_name) === false) {
+            return;
+        }
+
+        wp_enqueue_style(
+            $this->plugin_name . '-admin',
+            SSSS_PLUGIN_URL . 'admin/css/super-simple-social-share-admin.css',
+            array(),
+            $this->version,
+            'all'
+        );
+
+        wp_enqueue_script(
+            $this->plugin_name . '-admin',
+            SSSS_PLUGIN_URL . 'admin/js/super-simple-social-share-admin.js',
+            array('jquery'),
+            $this->version,
+            false
+        );
     }
 
     public function run()

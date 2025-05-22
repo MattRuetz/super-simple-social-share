@@ -4,7 +4,7 @@
  * Plugin Name: Super Simple Social Share
  * Plugin URI: https://github.com/mattruetz/super-simple-social-share
  * Description: A simple social sharing plugin that adds social media icons with tooltips using FontAwesome icons.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Matt Ruetz
  * Author URI: https://mattruetz.com
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('SSSS_VERSION', '1.0.0');
+define('SSSS_VERSION', '1.1.1');
 define('SSSS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SSSS_PLUGIN_URL', plugin_dir_url(__FILE__));
 
